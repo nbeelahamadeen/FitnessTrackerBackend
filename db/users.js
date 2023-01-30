@@ -1,44 +1,61 @@
+/* eslint-disable no-useless-catch */
 const client = require("./client");
 
 // database functions
 
 // user functions
 async function createUser({ username, password }) {
-  const { rows: [ user ] } = await client.query(`
-  INSERT INTO users(username, password)
-  VALUES($1, $2)
-  ON CONFLICT (username) DO NOTHING
-  RETURNING *;
-  `, [username, password]);
-  return user;
+  try {
+    const { rows: [ user ] } = await client.query(`
+    INSERT INTO users(username, password)
+    VALUES($1, $2)
+    ON CONFLICT (username) DO NOTHING
+    RETURNING *;
+    `, [username, password]);
+    return user;
+  } catch (error) {
+    throw error;
+  }
 
 }
 
 async function getUser({ username, password }) {
-  const { rows } = await client.query(`
-  SELECT id, username, password
-  FROM users;
-  `, [username, password]);
-  return rows;
+  try {
+    const { rows } = await client.query(`
+    SELECT id, username, password
+    FROM users;
+    `, [username, password]);
+    return rows;
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function getUserById(userId) {
-  const { row: [user] } = await client.query(`
+  try {
+    const { row: [user] } = await client.query(`
   SELECT id, username, password
   FROM users
   WHERE id=${userId}
   `)
   return user;
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function getUserByUsername(username) {
-  const { rows: [user] } = await client.query(`
+  try {
+    const { rows: [user] } = await client.query(`
   SELECT *
   FROM users
   WHERE username=$1;
   `, [username]);
 
   return user;
+  } catch (error) {
+    throw error;
+  }
 }
 
 
