@@ -7,6 +7,7 @@ async function createActivity({ name, description }) {
     const {rows: [activity]} = await client.query(`
     INSERT INTO activities(name, description)
     VALUES ($1, $2)
+    ON CONFLICT (name) DO NOTHING
     RETURNING *`, 
     [name, description]);
     
@@ -21,7 +22,7 @@ async function getAllActivities() {
     const { rows } = await client.query(`
     SELECT * FROM activities;
     `);
-
+    
     return rows;
   } catch (err) {
     throw err;
@@ -34,7 +35,7 @@ async function getActivityById(id) {
     SELECT * FROM activities
     WHERE ID=$1`, 
     [id]);
-
+    
     return activity;
   } catch(err) {
     throw err;
@@ -47,7 +48,7 @@ async function getActivityByName(name) {
     SELECT * FROM activities
     WHERE name=$1
     `, [name]);
-
+    
     return activity;
   } catch(err){
     throw err;
@@ -66,7 +67,7 @@ async function attachActivitiesToRoutines(routines) {
 async function updateActivity({ id, ...fields }) {
   const setString = Object.keys(fields).map(
     (key, index) => `"${ key }"=$${ index + 1}`).join(', ');
-  
+ 
   if(setString.length === 0) {
     return;
   }
@@ -75,10 +76,10 @@ async function updateActivity({ id, ...fields }) {
     const { rows: [activity] } = await client.query(`
     UPDATE activities 
     SET ${setString}
-    WHERE id=$1
+    WHERE id=${id}
     RETURNING *`, 
-    [id]);
-
+    Object.values(fields));
+    
     return activity;
   } catch(err) {
     throw err;
