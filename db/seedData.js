@@ -2,6 +2,9 @@
 // const { } = require('./');
 const { query } = require("express");
 const client = require("./client")
+const { 
+  createUser,
+} =require('./users')
 
 async function dropTables() {
   console.log("Dropping All Tables...")
