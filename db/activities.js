@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 const client = require('./client');
 
 // database functions
@@ -55,6 +56,11 @@ async function getActivityByName(name) {
 
 async function attachActivitiesToRoutines(routines) {
   // select and return an array of all activities
+  try {
+    
+  } catch (error) {
+    
+  }
 }
 
 async function updateActivity({ id, ...fields }) {
