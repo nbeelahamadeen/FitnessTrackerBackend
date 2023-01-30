@@ -6,6 +6,10 @@ const {
   createUser,
 } =require('./users')
 
+const {
+  createActivity,
+} = require('./activities');
+
 async function dropTables() {
   console.log("Dropping All Tables...")
   // drop all tables, in the correct order
