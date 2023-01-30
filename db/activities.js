@@ -2,8 +2,6 @@ const client = require('./client');
 
 // database functions
 async function createActivity({ name, description }) {
-  // return the new activity
-  // eslint-disable-next-line no-useless-catch
   try {
     const {rows: [activity]} = await client.query(`
     INSERT INTO activities(name, description)
@@ -18,8 +16,6 @@ async function createActivity({ name, description }) {
 }
 
 async function getAllActivities() {
-  // select and return an array of all activities
-  // eslint-disable-next-line no-useless-catch
   try {
     const { rows } = await client.query(`
     SELECT * FROM activities;
@@ -31,18 +27,56 @@ async function getAllActivities() {
   }
 }
 
-async function getActivityById(id) {}
+async function getActivityById(id) {
+  try {
+    const {rows: [activity]} = await client.query(`
+    SELECT * FROM activities
+    WHERE ID=$1`, 
+    [id]);
 
-async function getActivityByName(name) {}
+    return activity;
+  } catch(err) {
+    throw err;
+  }
+}
+
+async function getActivityByName(name) {
+  try{
+    const { rows:[activity] } = await client.query(`
+    SELECT * FROM activities
+    WHERE name=$1
+    `, [name]);
+
+    return activity;
+  } catch(err){
+    throw err;
+  }
+}
 
 async function attachActivitiesToRoutines(routines) {
   // select and return an array of all activities
 }
 
 async function updateActivity({ id, ...fields }) {
-  // don't try to update the id
-  // do update the name and description
-  // return the updated activity
+  const setString = Object.keys(fields).map(
+    (key, index) => `"${ key }"=$${ index + 1}`).join(', ');
+  
+  if(setString.length === 0) {
+    return;
+  }
+
+  try {
+    const { rows: [activity] } = await client.query(`
+    UPDATE activities 
+    SET ${setString}
+    WHERE id=$1
+    RETURNING *`, 
+    [id]);
+
+    return activity;
+  } catch(err) {
+    throw err;
+  }
 }
 
 module.exports = {
