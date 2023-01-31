@@ -58,9 +58,27 @@ async function getActivityByName(name) {
 async function attachActivitiesToRoutines(routines) {
   // select and return an array of all activities
   try {
-    
+    console.log("Starting to attach activities to Routines");
+    for(let i = 0; i < routines.length; i++) {
+      let routine = routines[i];
+      let routineActivities = await client.query(`
+      SELECT * FROM routine_activities
+      WHERE "routineId"=$1
+      `, [routine.id]);
+      routine.activities = [];
+      for(let j = 0; j < routineActivities.length; j++) {
+        let activity = routineActivities[i];
+        let relatedActivity = await client.query(`
+        SELECT * FROM activities 
+        WHERE id=$1
+        `, [activity.activityId]);
+        routine.activities.push(relatedActivity);
+      }
+    }
+    console.log("Finished attaching activities to Routines");
+    return routines;
   } catch (error) {
-    
+    throw error;
   }
 }
 
