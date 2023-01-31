@@ -4,11 +4,41 @@ const { query } = require("express");
 const client = require("./client")
 const { 
   createUser,
+  getUser,
+  getUserById,
+  getUserByUsername,
 } =require('./users')
 
 const {
+  getAllActivities,
+  getActivityById,
+  getActivityByName,
+  attachActivitiesToRoutines,
   createActivity,
+  updateActivity
 } = require('./activities');
+
+const {
+  getRoutineById,
+  getRoutinesWithoutActivities,
+  getAllRoutines,
+  getAllPublicRoutines,
+  getAllRoutinesByUser,
+  getPublicRoutinesByUser,
+  getPublicRoutinesByActivity,
+  createRoutine,
+  updateRoutine,
+  destroyRoutine,
+} = require('./routines');
+
+const {
+  getRoutineActivityById,
+  addActivityToRoutine,
+  getRoutineActivitiesByRoutine,
+  updateRoutineActivity,
+  destroyRoutineActivity,
+  canEditRoutineActivity,
+} = require('./routine_activities');
 
 async function dropTables() {
   console.log("Dropping All Tables...")
