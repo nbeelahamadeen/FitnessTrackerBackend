@@ -1,6 +1,7 @@
 /* eslint-disable no-useless-catch */
 const client = require("./client");
 const { getUserById } = require('./users');
+const { attachActivitiesToRoutines } = require("./activities");
 
 async function createRoutine({ creatorId, isPublic, name, goal }) {
   try {
@@ -40,14 +41,19 @@ async function getRoutinesWithoutActivities() {
 
 async function getAllRoutines() {
   try {
-    const { rows: routines } = await client.query(`
+    let { rows: routines } = await client.query(`
     SELECT * 
     FROM routines
     `)
-    console.log(routines)
+    
+    routines = await attachActivitiesToRoutines(routines);
+    console.log(routines);
+
+    
     routines.map(async routine =>   {
       routine.creatorName = await getUserById(routine.creatorId)
       return routine;
+
     })
 
 
