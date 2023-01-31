@@ -12,6 +12,9 @@ async function createUser({ username, password }) {
     ON CONFLICT (username) DO NOTHING
     RETURNING *;
     `, [username, password]);
+
+    delete user.password;
+
     return user;
   } catch (error) {
     throw error;
@@ -21,11 +24,18 @@ async function createUser({ username, password }) {
 
 async function getUser({ username, password }) {
   try {
-    const { rows } = await client.query(`
-    SELECT id, username, password
-    FROM users;
-    `, [username, password]);
-    return rows;
+    const { rows: [ user ] } = await client.query(`
+    SELECT * FROM users
+    WHERE username=$1;
+    `, [username]);
+    if(user.password !== password) {
+      delete user.password;
+      return null;
+    }
+    
+    delete user.password;
+
+    return user;
   } catch (error) {
     throw error;
   }
@@ -33,11 +43,14 @@ async function getUser({ username, password }) {
 
 async function getUserById(userId) {
   try {
-    const { row: [user] } = await client.query(`
+    const { rows: [user] } = await client.query(`
   SELECT id, username, password
   FROM users
-  WHERE id=${userId}
-  `)
+  WHERE id=$1
+  `, [userId])
+
+  delete user.password;
+  
   return user;
   } catch (error) {
     throw error;
