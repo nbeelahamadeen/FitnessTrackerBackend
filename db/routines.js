@@ -41,29 +41,39 @@ async function getRoutinesWithoutActivities() {
 
 async function getAllRoutines() {
   try {
-    let { rows: routines } = await client.query(`
-    SELECT * 
-    FROM routines
-    `)
-    
-    routines = await attachActivitiesToRoutines(routines);
-    console.log(routines);
+    let { rows } = await client.query(`
+    SELECT routines.*, count, duration, activities.name as "activityName", 
+    activities.id as "activityId", description, username as "creatorName", 
+    routine_activities.id as "routineActivityId" FROM routines
+      JOIN routine_activities ON routines.id = routine_activities."routineId"
+      JOIN activities ON activities.id = routine_activities."activityId"
+      JOIN users ON routines."creatorId" = users.id
+    `);
 
-    
-    routines.map(async routine =>   {
-      routine.creatorName = await getUserById(routine.creatorId)
-      return routine;
-
-    })
-
+    let routines = attachActivitiesToRoutines(rows);
+    routines = Object.values(routines);
 
     return routines;
   } catch (error) {
+    console.log(error);
     throw error;
   }
 }
 
-async function getAllPublicRoutines() {}
+async function getAllPublicRoutines() {
+  try {
+    let routines = await getAllRoutines();
+
+    routines = routines.filter(routine => {
+      return routine.isPublic
+    });
+ 
+    return routines;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
 
 async function getAllRoutinesByUser({ username }) {}
 
