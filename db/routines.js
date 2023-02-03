@@ -109,14 +109,20 @@ async function getPublicRoutinesByUser({ username }) {
 
 async function getPublicRoutinesByActivity({ id }) {
   try {
-    console.log({id});
     let routines = await getAllPublicRoutines();
 
     routines = routines.filter(routine => {
-      routine.activities.reduce( activity => {
-        return activity.id === id && routine.id === id;
-      })
-      return routine;
+      for(let i = 0; i < routine.activities.length; i++){
+        const activity = routine.activities[i];
+        if(activity.id === id){
+          //console.log(id, activity, routine);
+          return routine;
+        }
+      }
+      // routine.activities.reduce( activity => {
+      //   return activity.id === id && routine.id === id;
+      // })
+      // return routine;
     })
     // working progress - should not include a public routine containing another activity = this test is not passing 
 
