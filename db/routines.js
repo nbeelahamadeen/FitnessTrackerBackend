@@ -75,11 +75,58 @@ async function getAllPublicRoutines() {
   }
 }
 
-async function getAllRoutinesByUser({ username }) {}
+async function getAllRoutinesByUser({ username }) {
+  try {
+    
+    let routines = await getAllRoutines();
 
-async function getPublicRoutinesByUser({ username }) {}
+    routines = routines.filter(routine => {
+      return routine.creatorName === username;
+    })
 
-async function getPublicRoutinesByActivity({ id }) {}
+    return routines;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function getPublicRoutinesByUser({ username }) {
+  try {
+        
+    let routines = await getAllPublicRoutines();
+
+    routines = routines.filter(routine => {
+      return routine.creatorName === username;
+    })
+
+    return routines;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function getPublicRoutinesByActivity({ id }) {
+  try {
+    console.log({id});
+    let routines = await getAllPublicRoutines();
+
+    routines = routines.filter(routine => {
+      routine.activities.reduce( activity => {
+        return activity.id === id && routine.id === id;
+      })
+      return routine;
+    })
+    // working progress - should not include a public routine containing another activity = this test is not passing 
+
+    console.log(routines)
+    return routines;
+  } catch (error) {
+    throw error;
+  }
+
+}
 
 async function updateRoutine({ id, ...fields }) {}
 
