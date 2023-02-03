@@ -66,11 +66,11 @@ async function attachActivitiesToRoutines(routines) {
       WHERE "routineId"=$1
       `, [routine.id]);
       routine.activities = [];
-      console.log(routine.activities);
+      // console.log(routine.activities);
 
       for(let j = 0; j < routineActivities.length; j++) {
         let activity = routineActivities[j];
-        console.log(activity);
+        // console.log(activity);
         let { rows: [ relatedActivity ] } = await client.query(`
         SELECT * FROM activities 
         WHERE id=$1
