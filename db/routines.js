@@ -1,6 +1,5 @@
 /* eslint-disable no-useless-catch */
 const client = require("./client");
-const { getUserById } = require('./users');
 const { attachActivitiesToRoutines } = require("./activities");
 
 async function createRoutine({ creatorId, isPublic, name, goal }) {
@@ -109,23 +108,21 @@ async function getPublicRoutinesByUser({ username }) {
 
 async function getPublicRoutinesByActivity({ id }) {
   try {
-    console.log({id});
     let routines = await getAllPublicRoutines();
 
     routines = routines.filter(routine => {
-      routine.activities.reduce( activity => {
-        return activity.id === id && routine.id === id;
-      })
-      return routine;
-    })
-    // working progress - should not include a public routine containing another activity = this test is not passing 
+      for(let i = 0; i < routine.activities.length; i++){
+        const activity = routine.activities[i];
+        if(activity.id === id){
+          return routine;
+        };
+      };
+    });
 
-    console.log(routines)
     return routines;
   } catch (error) {
     throw error;
   }
-
 }
 
 async function updateRoutine({ id, ...fields }) {}
