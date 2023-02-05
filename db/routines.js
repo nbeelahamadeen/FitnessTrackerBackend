@@ -1,6 +1,5 @@
 /* eslint-disable no-useless-catch */
 const client = require("./client");
-const { getUserById } = require('./users');
 const { attachActivitiesToRoutines } = require("./activities");
 
 async function createRoutine({ creatorId, isPublic, name, goal }) {
@@ -75,11 +74,56 @@ async function getAllPublicRoutines() {
   }
 }
 
-async function getAllRoutinesByUser({ username }) {}
+async function getAllRoutinesByUser({ username }) {
+  try {
+    
+    let routines = await getAllRoutines();
 
-async function getPublicRoutinesByUser({ username }) {}
+    routines = routines.filter(routine => {
+      return routine.creatorName === username;
+    })
 
-async function getPublicRoutinesByActivity({ id }) {}
+    return routines;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function getPublicRoutinesByUser({ username }) {
+  try {
+        
+    let routines = await getAllPublicRoutines();
+
+    routines = routines.filter(routine => {
+      return routine.creatorName === username;
+    })
+
+    return routines;
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function getPublicRoutinesByActivity({ id }) {
+  try {
+    let routines = await getAllPublicRoutines();
+
+    routines = routines.filter(routine => {
+      for(let i = 0; i < routine.activities.length; i++){
+        const activity = routine.activities[i];
+        if(activity.id === id){
+          return routine;
+        };
+      };
+    });
+
+    return routines;
+  } catch (error) {
+    throw error;
+  }
+}
 
 async function updateRoutine({ id, ...fields }) {}
 

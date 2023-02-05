@@ -1,17 +1,30 @@
 /* eslint-disable no-useless-catch */
 const client = require("./client");
+const bcrypt = require('bcrypt');
 
-// database functions
+//hash password and check hashed password
+async function hashPassword({password}) {
+  const saltRounds = 10;
+  const hashed = await bcrypt.hash(password, saltRounds);
+  return hashed;
+}
+
+async function checkPassword(password, hashed) {
+  const compare = await bcrypt.compare(password, hashed);
+  return compare;
+}
 
 // user functions
 async function createUser({ username, password }) {
   try {
+    const newPassword = await hashPassword({password});
+
     const { rows: [ user ] } = await client.query(`
     INSERT INTO users(username, password)
     VALUES($1, $2)
     ON CONFLICT (username) DO NOTHING
     RETURNING *;
-    `, [username, password]);
+    `, [username, newPassword]);
 
     delete user.password;
 
@@ -28,7 +41,10 @@ async function getUser({ username, password }) {
     SELECT * FROM users
     WHERE username=$1;
     `, [username]);
-    if(user.password !== password) {
+    
+    const match = await checkPassword(password, user.password);
+  
+    if(!match) {
       delete user.password;
       return null;
     }
