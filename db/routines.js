@@ -120,7 +120,7 @@ async function getPublicRoutinesByActivity({ id }) {
     })
     // working progress - should not include a public routine containing another activity = this test is not passing 
 
-    console.log(routines)
+    // console.log(routines)
     return routines;
   } catch (error) {
     throw error;
@@ -128,9 +128,47 @@ async function getPublicRoutinesByActivity({ id }) {
 
 }
 
-async function updateRoutine({ id, ...fields }) {}
+async function updateRoutine({ id, ...fields }) {
+// Extract the keys of the fields to be updated and format them as a SET field for the SQL statement
+  const setFields = Object.keys(fields).map(
+    // Format each key/value pair as "key"=$n, where n is the index of the value in the values array
+    (key, index) => `"${ key }"=$${ index + 1 }`
+    ).join(', ');
+  try {
+    if(setFields.length > 0 )
+  {
+   const {rows:[routine]} = await client.query(`
+    UPDATE routines
+    SET ${setFields}
+    WHERE id = ${id}
+    RETURNING *
+    ;`,Object.values(fields))
+    
+    return routine;
+  }
+  } catch (error) {
+    throw error;
+  }
+}
 
-async function destroyRoutine(id) {}
+async function destroyRoutine(id) {
+  try {
+    let { rows: routine } = await client.query(`
+    DELETE FROM routine_activities
+    WHERE "routineId" = $1
+    ;`, [id])
+    
+      await client.query(`
+    DELETE
+    FROM routines 
+    WHERE "id" = $1
+      ;`, [id])
+       
+    return routine;
+  } catch (error) {
+    throw error;
+  }
+}
 
 module.exports = {
   getRoutineById,
