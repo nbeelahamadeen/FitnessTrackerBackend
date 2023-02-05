@@ -78,34 +78,8 @@ async function attachActivitiesToRoutines(routines) {
         `, [activity.activityId]);
   
         routine.activities.push(relatedActivity);
-=======
-const attachActivitiesToRoutines = (routines) => {
-  const routinesById = {};
-  routines.forEach(routine => {
-    if(!routinesById[routine.id]) {
-      routinesById[routine.id] = {
-        id: routine.id,
-        creatorId: routine.creatorId,
-        creatorName: routine.creatorName,
-        isPublic: routine.isPublic, 
-        name: routine.name,
-        goal: routine.goal,
-        activities: [],
->>>>>>> 1334df5f92b9c92944a88166981aac619decb778
       }
-    }
-    const activity = {
-      routineId: routine.id,
-      routineActivityId: routine.routineActivityId,
-      name: routine.activityName,
-      id: routine.activityId, 
-      description: routine.description, 
-      count: routine.count,
-      duration: routine.duration,
-    }
-    //console.log(activity);
-    routinesById[routine.id].activities.push(activity);
-  })
+
   return routinesById;
 }
 
