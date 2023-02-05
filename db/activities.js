@@ -55,31 +55,32 @@ async function getActivityByName(name) {
   }
 }
 
-<<<<<<< HEAD
-async function attachActivitiesToRoutines(routines) {
-  // select and return an array of all activities
-  try {
-    console.log("Starting to attach activities to Routines");
-    for(let i = 0; i < routines.length; i++) {
-      let routine = routines[i];
-      let { rows:routineActivities } = await client.query(`
-      SELECT * FROM routine_activities
-      WHERE "routineId"=$1
-      `, [routine.id]);
-      routine.activities = [];
-      // console.log(routine.activities);
-
-      for(let j = 0; j < routineActivities.length; j++) {
-        let activity = routineActivities[j];
-        // console.log(activity);
-        let { rows: [ relatedActivity ] } = await client.query(`
-        SELECT * FROM activities 
-        WHERE id=$1
-        `, [activity.activityId]);
-  
-        routine.activities.push(relatedActivity);
+const attachActivitiesToRoutines = (routines) => {
+  const routinesById = {};
+  routines.forEach(routine => {
+    if(!routinesById[routine.id]) {
+      routinesById[routine.id] = {
+        id: routine.id,
+        creatorId: routine.creatorId,
+        creatorName: routine.creatorName,
+        isPublic: routine.isPublic, 
+        name: routine.name,
+        goal: routine.goal,
+        activities: [],
       }
-
+    }
+    const activity = {
+      routineId: routine.id,
+      routineActivityId: routine.routineActivityId,
+      name: routine.activityName,
+      id: routine.activityId, 
+      description: routine.description, 
+      count: routine.count,
+      duration: routine.duration,
+    }
+    //console.log(activity);
+    routinesById[routine.id].activities.push(activity);
+  })
   return routinesById;
 }
 
@@ -112,4 +113,4 @@ module.exports = {
   attachActivitiesToRoutines,
   createActivity,
   updateActivity,
-};
+}
