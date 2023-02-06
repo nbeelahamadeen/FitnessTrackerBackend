@@ -8,7 +8,8 @@ const {
     UnauthorizedError,
   } = require("../errors");
 
-const { createUser, getUserByUsername } = require('../db');
+const { createUser, getUserByUsername, getUser } = require('../db');
+const client = require("../db/client");
 
 // POST /api/users/register
 userRouter.post('/register', async (req, res, next) => {
@@ -54,7 +55,31 @@ userRouter.post('/register', async (req, res, next) => {
 })
 
 // POST /api/users/login
+userRouter.post('/login', async (req, res, next) =>{
+    const { username, password } = req.body;
 
+    try {
+        if(username && password){
+            const user = await getUser({username, password});
+
+            const token = jwt.sign({
+                id: user.id,
+                username}, 
+                process.env.JWT_SECRET
+            );
+
+            res.send({
+                "user": user,
+                "message":"you're logged in!",
+                "token": token
+            })
+        }
+    
+
+    } catch (error) {
+        next(error);
+    }
+})
 // GET /api/users/me
 
 // GET /api/users/:username/routines
