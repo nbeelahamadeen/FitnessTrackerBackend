@@ -202,7 +202,7 @@ describe("/api/users", () => {
   });
 
   describe("GET /api/users/me", () => {
-    xit("sends back users data if valid token is supplied in header", async () => {
+    it("sends back users data if valid token is supplied in header", async () => {
       const { fakeUser, token } = await createFakeUserWithToken();
 
       const response = await request(app)
@@ -214,7 +214,7 @@ describe("/api/users", () => {
       expect(response.body).toEqual(objectContaining(fakeUser));
     });
 
-    xit("rejects requests with no valid token", async () => {
+    it("rejects requests with no valid token", async () => {
       const response = await request(app).get("/api/users/me");
 
       expect(response.status).toBe(401);
