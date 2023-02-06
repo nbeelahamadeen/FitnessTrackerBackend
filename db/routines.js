@@ -44,9 +44,9 @@ async function getAllRoutines() {
     SELECT routines.*, count, duration, activities.name as "activityName", 
     activities.id as "activityId", description, username as "creatorName", 
     routine_activities.id as "routineActivityId" FROM routines
-      JOIN routine_activities ON routines.id = routine_activities."routineId"
-      JOIN activities ON activities.id = routine_activities."activityId"
-      JOIN users ON routines."creatorId" = users.id
+    JOIN routine_activities ON routines.id = routine_activities."routineId"
+    JOIN activities ON activities.id = routine_activities."activityId"
+    JOIN users ON routines."creatorId" = users.id
     `);
 
     let routines = attachActivitiesToRoutines(rows);
@@ -115,8 +115,8 @@ async function getPublicRoutinesByActivity({ id }) {
         const activity = routine.activities[i];
         if(activity.id === id){
           return routine;
-        };
-      };
+        }
+      }
     });
 
     // console.log(routines)
@@ -156,7 +156,7 @@ async function destroyRoutine(id) {
     WHERE "routineId" = $1
     ;`, [id])
     
-      await client.query(`
+    await client.query(`
     DELETE
     FROM routines 
     WHERE "id" = $1
