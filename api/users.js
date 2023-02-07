@@ -22,7 +22,7 @@ userRouter.post('/register', async (req, res, next) => {
         const duplicateUser = await getUserByUsername(username);
 
         if(duplicateUser) {
-            res.send({
+            res.status(500).send({
                 "error": "UserTakenError",
                 "message": UserTakenError(username),
                 "name": username
@@ -30,7 +30,7 @@ userRouter.post('/register', async (req, res, next) => {
         }
 
         if(password.length < 8) {
-            res.send({
+            res.status(500).send({
                 "error": 'PasswordTooShort',
                 "message": PasswordTooShortError(), 
                 "name": username
@@ -111,23 +111,30 @@ userRouter.get('/me', async (req, res, next) => {
 })
 // GET /api/users/:username/routines
 userRouter.get('/:username/routines', async (req, res, next) => {
-    const { username } = req.params;
-    const loggedInUser = req.user;
-    console.log(loggedInUser);
+    const { username } = req.params; 
+    const prefix = 'Bearer ';
+    const auth = req.header('Authorization');
+    if(!auth) {
+        const publicRoutines = await getPublicRoutinesByUser({ username });
+        res.send(publicRoutines);
 
-    try {
-       const publicRoutines = await getPublicRoutinesByUser({ username });
-
-       if(loggedInUser) {
-        const allRoutines = await getAllRoutinesByUser({ loggedInUser });
-        publicRoutines.push(allRoutines);
-       }
-       
-       
-       res.send(publicRoutines);
+    } else if (auth.startsWith(prefix)) {
+        const token = auth.slice(prefix.length);
+    
+        try {
+            
+            const { id, username: loggedIn } = jwt.verify(token, JWT_SECRET);
+            if(username === loggedIn){
+                const allRoutines = await getAllRoutinesByUser({ username });
+                console.log(allRoutines)
+                res.send(allRoutines);
+            }else{
+                const publicRoutines = await getPublicRoutinesByUser({ username });
+                res.send(publicRoutines);
+            }  
     } catch (error) {
         next(error);
     }
-})
+}})
 
 module.exports = userRouter;
