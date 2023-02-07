@@ -10,7 +10,8 @@ const {
     UnauthorizedError,
   } = require("../errors");
 
-const { createUser, getUserByUsername, getUser, getUserById } = require('../db');
+const { createUser, getUserByUsername, getUser, getUserById, 
+    getPublicRoutinesByUser, getAllRoutinesByUser } = require('../db');
 const client = require("../db/client");
 
 // POST /api/users/register
@@ -92,27 +93,46 @@ userRouter.get('/me', async (req, res, next) => {
     } else if (auth.startsWith(prefix)) {
         const token = auth.slice(prefix.length);
     
-    try {
-        const { id } = jwt.verify(token, JWT_SECRET);
+        try {
+            const { id } = jwt.verify(token, JWT_SECRET);
 
-        if(id) {
-            const user = await getUserById(id);
-            res.send(user);
-        } else {
-            //unable to get 401 status without valid token
-            res.send({
-                "message": UnauthorizedError(),
-                "error": "UnauthorizedError", 
-                "name": "UnauthorizedError"
-            });
-            return res.status(401);
+            if(id) {
+                const user = await getUserById(id);
+                res.send(user);
+            } else {
+                //unable to get 401 status without valid token
+                res.send({
+                    "message": UnauthorizedError(),
+                    "error": "UnauthorizedError", 
+                    "name": "UnauthorizedError"
+                });
+                //return res.status(401);
+            }
+
+        } catch (error) {
+            next(error);
         }
+    }
+})
+// GET /api/users/:username/routines
+userRouter.get('/:username/routines', async (req, res, next) => {
+    const { username } = req.params;
+    const loggedInUser = req.user;
+    console.log(loggedInUser);
 
+    try {
+       const publicRoutines = await getPublicRoutinesByUser({ username });
+
+       if(loggedInUser) {
+        const allRoutines = await getAllRoutinesByUser({ loggedInUser });
+        publicRoutines.push(allRoutines);
+       }
+       
+       
+       res.send(publicRoutines);
     } catch (error) {
         next(error);
     }
-}
 })
-// GET /api/users/:username/routines
 
 module.exports = userRouter;
