@@ -89,7 +89,11 @@ userRouter.get('/me', async (req, res, next) => {
     const prefix = 'Bearer ';
     const auth = req.header('Authorization');
     if(!auth) {
-        next();
+        res.status(401).send({
+            "error": UnauthorizedError(),
+            "message": UnauthorizedError(), 
+            "name": "UnauthorizedError"
+        });
     } else if (auth.startsWith(prefix)) {
         const token = auth.slice(prefix.length);
     
@@ -99,16 +103,7 @@ userRouter.get('/me', async (req, res, next) => {
             if(id) {
                 const user = await getUserById(id);
                 res.send(user);
-            } else {
-                //unable to get 401 status without valid token
-                res.send({
-                    "message": UnauthorizedError(),
-                    "error": "UnauthorizedError", 
-                    "name": "UnauthorizedError"
-                });
-                //return res.status(401);
             }
-
         } catch (error) {
             next(error);
         }

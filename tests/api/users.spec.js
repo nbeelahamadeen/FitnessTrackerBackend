@@ -214,7 +214,7 @@ describe("/api/users", () => {
       expect(response.body).toEqual(objectContaining(fakeUser));
     });
 
-    xit("rejects requests with no valid token", async () => {
+    it("rejects requests with no valid token", async () => {
       const response = await request(app).get("/api/users/me");
 
       expect(response.status).toBe(401);
