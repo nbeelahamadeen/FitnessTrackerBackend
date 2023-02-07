@@ -126,15 +126,14 @@ userRouter.get('/:username/routines', async (req, res, next) => {
             const { id, username: loggedIn } = jwt.verify(token, JWT_SECRET);
             if(username === loggedIn){
                 const allRoutines = await getAllRoutinesByUser({ username });
-                console.log(allRoutines)
                 res.send(allRoutines);
             }else{
                 const publicRoutines = await getPublicRoutinesByUser({ username });
                 res.send(publicRoutines);
             }  
-    } catch (error) {
-        next(error);
-    }
+        } catch (error) {
+            next(error);
+        }
 }})
 
 module.exports = userRouter;
