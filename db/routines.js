@@ -20,10 +20,10 @@ async function getRoutineById(id) {
   try {
     const { rows: [routine] } = await client.query(`
     SELECT *
-    FROM routine
+    FROM routines
     WHERE id=$1
     `,[id])
-
+    
     return routine;
   } catch (error) {
     throw error;

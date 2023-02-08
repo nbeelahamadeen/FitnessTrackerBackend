@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = process.env;
-const { getAllPublicRoutines, createRoutine } = require('../db');
-const { UnauthorizedError } = require("../errors");
+const { getAllPublicRoutines, createRoutine, updateRoutine, getRoutineById } = require('../db');
+const { UnauthorizedError, UnauthorizedUpdateError } = require("../errors");
 
 
 // GET /api/routines
@@ -42,6 +42,40 @@ router.post('/', async (req, res, next) => {
 })
 
 // PATCH /api/routines/:routineId
+router.patch('/:routineId', async (req, res, next) => {
+    const { isPublic, name, goal } = req.body;
+    const { routineId } = req.params;
+
+    const prefix = 'Bearer ';
+    const auth = req.header('Authorization');
+    if (!auth) {
+        res.status(401).send({
+            "error": UnauthorizedError(),
+            "message": UnauthorizedError(),
+            "name": "UnauthorizedError"
+        });
+    } else if (auth.startsWith(prefix)) {
+        const token = auth.slice(prefix.length);
+        try {
+            const { id, username } = jwt.verify(token, JWT_SECRET);
+            let routine = await getRoutineById(routineId);
+            
+            if(id === routine.creatorId) {
+                routine = await updateRoutine({id: routineId, isPublic, name, goal});
+                res.send(routine);
+            } else {
+                res.status(403).send({
+                    "error": UnauthorizedUpdateError(),
+                    "message": UnauthorizedUpdateError(username, routine.name),
+                    "name": "UnauthorizedUpdateError"
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    }
+})
 
 // DELETE /api/routines/:routineId
 
