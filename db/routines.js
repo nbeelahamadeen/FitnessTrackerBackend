@@ -107,19 +107,24 @@ async function getPublicRoutinesByUser({ username }) {
 }
 
 async function getPublicRoutinesByActivity({ id }) {
+  const activityId = id;
   try {
     let routines = await getAllPublicRoutines();
-
+    // console.log(routines);
+    
     routines = routines.filter(routine => {
       for(let i = 0; i < routine.activities.length; i++){
         const activity = routine.activities[i];
-        if(activity.id === id){
+        console.log(activity["id"]);
+
+
+        if(activity["id"] === activityId){
+          console.log(activityId)
           return routine;
         }
       }
     });
-
-    // console.log(routines)
+    console.log(routines);
     return routines;
   } catch (error) {
     throw error;
