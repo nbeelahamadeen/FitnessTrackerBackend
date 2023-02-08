@@ -152,18 +152,19 @@ async function updateRoutine({ id, ...fields }) {
 
 async function destroyRoutine(id) {
   try {
-    let { rows: routine } = await client.query(`
+    const { rows: routine } = await client.query(`
     DELETE FROM routine_activities
     WHERE "routineId" = $1
     ;`, [id])
     
-    await client.query(`
+    const { rows: [deletedRoutine] } = await client.query(`
     DELETE
     FROM routines 
     WHERE "id" = $1
+    RETURNING *
       ;`, [id])
        
-    return routine;
+    return deletedRoutine;
   } catch (error) {
     throw error;
   }

@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = process.env;
-const { getAllPublicRoutines, createRoutine, updateRoutine, getRoutineById } = require('../db');
-const { UnauthorizedError, UnauthorizedUpdateError } = require("../errors");
+const { getAllPublicRoutines, createRoutine, updateRoutine, getRoutineById, destroyRoutine } = require('../db');
+const { UnauthorizedError, UnauthorizedUpdateError, UnauthorizedDeleteError } = require("../errors");
 
 
 // GET /api/routines
@@ -78,6 +78,39 @@ router.patch('/:routineId', async (req, res, next) => {
 })
 
 // DELETE /api/routines/:routineId
+router.delete('/:routineId', async (req, res, next) => {
+    const { routineId } = req.params;
+
+    const prefix = 'Bearer ';
+    const auth = req.header('Authorization');
+    if (!auth) {
+        res.status(401).send({
+            "error": UnauthorizedError(),
+            "message": UnauthorizedError(),
+            "name": "UnauthorizedError"
+        });
+    } else if (auth.startsWith(prefix)) {
+        const token = auth.slice(prefix.length);
+        try {
+            const { id, username } = jwt.verify(token, JWT_SECRET);
+            let routine = await getRoutineById(routineId);
+            
+            if(id === routine.creatorId) {
+                routine = await destroyRoutine(routineId);
+                res.send(routine);
+            } else {
+                res.status(403).send({
+                    "error": UnauthorizedDeleteError(),
+                    "message": UnauthorizedDeleteError(username, routine.name),
+                    "name": "UnauthorizedDeleteError"
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            next(error);
+        }
+    }
+})
 
 // POST /api/routines/:routineId/activities
 
