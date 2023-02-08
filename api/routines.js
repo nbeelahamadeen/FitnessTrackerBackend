@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = process.env;
-const { getAllPublicRoutines, createRoutine, updateRoutine, getRoutineById, destroyRoutine } = require('../db');
-const { UnauthorizedError, UnauthorizedUpdateError, UnauthorizedDeleteError } = require("../errors");
+const { getAllPublicRoutines, createRoutine, updateRoutine, getRoutineById, destroyRoutine, addActivityToRoutine, getRoutineActivitiesByRoutine } = require('../db');
+const { UnauthorizedError, UnauthorizedUpdateError, UnauthorizedDeleteError, DuplicateRoutineActivityError } = require("../errors");
 
 
 // GET /api/routines
@@ -113,5 +113,32 @@ router.delete('/:routineId', async (req, res, next) => {
 })
 
 // POST /api/routines/:routineId/activities
+//still need to deal with duplicate pairs test
+router.post('/:routineId/activities', async (req, res, next) => {
+    const { routineId } = req.params;
+    const { activityId, count, duration } = req.body;
+
+    try {
+        // const [routineActivities] = await getRoutineActivitiesByRoutine({id: routineId});
+        // console.log("hello", typeof routineActivities.activityId, typeof activityId);
+        // if(routineActivities.activityId === activityId) {
+
+        //     res.status(403).send({
+        //         "error": DuplicateRoutineActivityError(),
+        //         "message": DuplicateRoutineActivityError(routineId, activityId),
+        //         "name": "DuplicateRoutineActivityError"
+        //     });
+        // } else {
+            const activity = await addActivityToRoutine({routineId, activityId, count, duration});
+            console.log("hi",activity)
+            res.send(activity);
+        // }
+
+        
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+})
 
 module.exports = router;
