@@ -8,11 +8,9 @@ const { ActivityExistsError, UnauthorizedError, ActivityNotFoundError } = requir
 // GET /api/activities/:activityId/routines
 router.get('/:activityId/routines', async(req, res, next) => {
     const { activityId } = req.params;
-    //still not passing the list of routines
-    console.log(activityId);
+
     try {
        const routines = await getPublicRoutinesByActivity({ id: activityId });
-       console.log(routines);
 
        if(!routines.length) {
         res.status(404).send({
@@ -20,9 +18,9 @@ router.get('/:activityId/routines', async(req, res, next) => {
             "message": ActivityNotFoundError(activityId), 
             "name": "ActivityNotFoundError"
         });
-       } 
-
-       res.send(routines);
+       } else {
+        res.send(routines);
+       }
 
     } catch (error) {
         next(error);
@@ -112,8 +110,6 @@ router.patch('/:activityId', async (req, res, next) => {
                 }); 
             } else{
                 const activity = await updateActivity({id: activityId, name, description})
-                console.log("Updated Activity")
-                console.log(activity);
                 res.send(activity);
             }
 
