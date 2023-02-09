@@ -9,7 +9,7 @@ const {
   getRoutineById,
   getRoutineActivityById,
 } = require("../db");
-const { UnauthorizedError, UnauthorizedUpdateError } = require("../errors");
+const { UnauthorizedError, UnauthorizedUpdateError, UnauthorizedDeleteError } = require("../errors");
 
 // PATCH /api/routine_activities/:routineActivityId
 router.patch("/:routineActivityId", async (req, res, next) => {
@@ -33,7 +33,7 @@ router.patch("/:routineActivityId", async (req, res, next) => {
         const routineActivity = await getRoutineActivityById(routineActivityId)
 
         const routine = await getRoutineById(routineActivity.routineId);
-        res.status(401).send({
+        res.status(403).send({
           error: UnauthorizedUpdateError(),
           message: UnauthorizedUpdateError(username, routine.name),
           name: "UnauthorizedUpdateError",
@@ -53,5 +53,41 @@ router.patch("/:routineActivityId", async (req, res, next) => {
   }
 });
 // DELETE /api/routine_activities/:routineActivityId
+router.delete("/:routineActivityId", async (req, res, next) => {
+    const { routineActivityId } = req.params;
+    const prefix = "Bearer ";
+    const auth = req.header("Authorization");
+    if (!auth) {
+      res.status(401).send({
+        error: UnauthorizedError(),
+        message: UnauthorizedError(),
+        name: "UnauthorizedError",
+      });
+    } else if (auth.startsWith(prefix)) {
+      const token = auth.slice(prefix.length);
+      try {
+        const { id, username } = jwt.verify(token, JWT_SECRET);
+        const creator = await canEditRoutineActivity(routineActivityId, id);
+  
+        if (!creator) {
+          const routineActivity = await getRoutineActivityById(routineActivityId)
+  
+          const routine = await getRoutineById(routineActivity.routineId);
+          res.status(403).send({
+            error: UnauthorizedDeleteError(),
+            message: UnauthorizedDeleteError(username, routine.name),
+            name: "UnauthorizedDeleteError",
+          });
+  
+        } else {
+          const remove = await destroyRoutineActivity(routineActivityId);
+          res.send(remove);
+        }
+      } catch (error) {
+        next(error);
+      }
+    }
+  });
+
 
 module.exports = router;
