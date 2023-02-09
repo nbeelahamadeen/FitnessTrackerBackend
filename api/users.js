@@ -29,7 +29,7 @@ userRouter.post('/register', async (req, res, next) => {
             });
         }
 
-        if(password.length < 8) {
+        else if(password.length < 8) {
             res.status(500).send({
                 "error": 'PasswordTooShort',
                 "message": PasswordTooShortError(), 
@@ -37,20 +37,22 @@ userRouter.post('/register', async (req, res, next) => {
             })
         }
         
-        const user = await createUser({username, password});
+        else {
+            const user = await createUser({username, password});
 
 
-        const token = jwt.sign({
-            id: user.id,
-            username}, 
-            process.env.JWT_SECRET
-        );
+            const token = jwt.sign({
+                id: user.id,
+                username}, 
+                process.env.JWT_SECRET
+            );
 
-        res.send({
-            "message": "Thank you for signing up", 
-            "token": token,
-            "user": user
-        });
+            res.send({
+                "message": "Thank you for signing up", 
+                "token": token,
+                "user": user
+            });
+        }
          
     } catch (error) {
       next(error); 

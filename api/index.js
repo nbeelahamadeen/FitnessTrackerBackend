@@ -6,13 +6,6 @@ router.get('/health', async (req, res, next) => {
     res.send({ message: "Server is healthy!"});
 });
 
-// GET /api/unknown
-// router.get('/unknown', async (err, req, res, next) => {
-//     let message = "This page cannot be found";
-//     console.log( typeof message);
-//     res.status(err.status || 404).send({ "message": message });
-// })
-
 // ROUTER: /api/users
 const usersRouter = require('./users');
 router.use('/users', usersRouter);
@@ -28,5 +21,15 @@ router.use('/routines', routinesRouter);
 // ROUTER: /api/routine_activities
 const routineActivitiesRouter = require('./routineActivities');
 router.use('/routine_activities', routineActivitiesRouter);
+
+router.use((err, req, res, next) => {
+    res.status(err.status || 500).send(err);
+})
+
+// GET /api/unknown
+router.use((req, res, next) => {
+    const message = "This API page cannot be found";
+    res.status(404).send({ "message": message });
+})
 
 module.exports = router;

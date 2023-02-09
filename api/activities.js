@@ -43,11 +43,17 @@ router.post('/', async(req, res, next) => {
     const prefix = 'Bearer ';
     const auth = req.header('Authorization');
     if(!auth) {
-        res.status(401).send({
+        next({
             "error": UnauthorizedError(),
             "message": UnauthorizedError(), 
-            "name": "UnauthorizedError"
-        });
+            "name": "UnauthorizedError", 
+            "status": 401
+        })
+        // res.status(401).send({
+        //     "error": UnauthorizedError(),
+        //     "message": UnauthorizedError(), 
+        //     "name": "UnauthorizedError"
+        // });
     } else if (auth.startsWith(prefix)) {
         const token = auth.slice(prefix.length);
     
@@ -56,15 +62,22 @@ router.post('/', async(req, res, next) => {
             const duplicateName = await getActivityByName(name);
 
             if(duplicateName) {
-                res.status(500).send({
+                next({
                     "error": ActivityExistsError(),
                     "message": ActivityExistsError(name), 
                     "name": "ActivityExistsError"
-                }); 
+                })
+                // res.status(500).send({
+                //     "error": ActivityExistsError(),
+                //     "message": ActivityExistsError(name), 
+                //     "name": "ActivityExistsError"
+                // }); 
+            } else {
+                const activity = await createActivity({ name, description });
+                res.send(activity);
             }
 
-            const activity = await createActivity({ name, description });
-            res.send(activity);
+            
             
         } catch (error) {
             next(error);
