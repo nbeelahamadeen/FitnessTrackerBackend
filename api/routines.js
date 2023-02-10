@@ -82,7 +82,7 @@ router.patch("/:routineId", requireAuthentication, async (req, res, next) => {
         res.send(routine);
       } else {
         next({
-          error: UnauthorizedUpdateError(),
+          error: "UnauthorizedUpdateError",
           message: UnauthorizedUpdateError(username, routine.name),
           name: "UnauthorizedUpdateError",
           status: 403

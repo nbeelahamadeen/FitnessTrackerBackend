@@ -77,7 +77,7 @@ router.post('/', requireAuthentication, async (req, res, next) => {
 // PATCH /api/activities/:activityId
 router.patch('/:activityId', requireAuthentication, async (req, res, next) => {
     const { activityId } = req.params;
-    const { name, description } = req.body;
+    const { name } = req.body;
     const token = getToken(req.header('Authorization'));
     const { id } = jwt.verify(token, JWT_SECRET);
 
@@ -109,7 +109,7 @@ router.patch('/:activityId', requireAuthentication, async (req, res, next) => {
                     "name": "ActivityExistsError"
                 }); 
             } else{
-                const activity = await updateActivity({id: activityId, name, description})
+                const activity = await updateActivity({id: activityId, ...req.body})
                 res.send(activity);
             }
 

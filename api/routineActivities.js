@@ -15,7 +15,6 @@ const { UnauthorizedError, UnauthorizedUpdateError, UnauthorizedDeleteError } = 
 // PATCH /api/routine_activities/:routineActivityId
 router.patch("/:routineActivityId", requireAuthentication, async (req, res, next) => {
   const { routineActivityId } = req.params;
-  const { count, duration } = req.body;
   const token = getToken(req.header('Authorization'));
   const { id, username } = jwt.verify(token, JWT_SECRET);
 
@@ -44,8 +43,7 @@ router.patch("/:routineActivityId", requireAuthentication, async (req, res, next
       } else {
         const update = await updateRoutineActivity({
           id: routineActivityId,
-          count,
-          duration,
+          ...req.body
         });
         res.send(update);
       }
