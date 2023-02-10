@@ -13,7 +13,6 @@ const {
 
 const { createUser, getUserByUsername, getUser, getUserById, 
     getPublicRoutinesByUser, getAllRoutinesByUser } = require('../db');
-const client = require("../db/client");
 
 // POST /api/users/register
 userRouter.post('/register', requireUser, async (req, res, next) => {
