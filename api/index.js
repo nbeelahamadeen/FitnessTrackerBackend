@@ -22,8 +22,13 @@ router.use('/routines', routinesRouter);
 const routineActivitiesRouter = require('./routineActivities');
 router.use('/routine_activities', routineActivitiesRouter);
 
+//Custom error handler
 router.use((err, req, res, next) => {
-    res.status(err.status || 500).send(err);
+    res.status(err.status || 500)
+    if(err.status) {
+        delete err.status;
+    }
+    res.send(err);
 })
 
 // GET /api/unknown

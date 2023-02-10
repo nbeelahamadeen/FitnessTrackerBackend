@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = process.env;
 const { getAllActivities, createActivity, getActivityByName, getPublicRoutinesByActivity,updateActivity, getActivityById } = require('../db');
+const { requireAuthentication, getToken } = require('./utils');
 const { ActivityExistsError, UnauthorizedError, ActivityNotFoundError } = require("../errors");
 
 // GET /api/activities/:activityId/routines
@@ -13,10 +14,11 @@ router.get('/:activityId/routines', async(req, res, next) => {
        const routines = await getPublicRoutinesByActivity({ id: activityId });
 
        if(!routines.length) {
-        res.status(404).send({
-            "error": ActivityNotFoundError(),
+        next({
+            "error": "ActivityNotFoundError",
             "message": ActivityNotFoundError(activityId), 
-            "name": "ActivityNotFoundError"
+            "name": "ActivityNotFoundError", 
+            "status": 404
         });
        } else {
         res.send(routines);
@@ -38,47 +40,34 @@ router.get('/', async(req, res, next) =>{
 });
 
 // POST /api/activities
-router.post('/', async(req, res, next) => {
+router.post('/', requireAuthentication, async (req, res, next) => {
     const { name, description } = req.body;
-    const prefix = 'Bearer ';
-    const auth = req.header('Authorization');
-    if(!auth) {
+    const token = getToken(req.header('Authorization'));
+    const { id } = jwt.verify(token, JWT_SECRET);
+
+    if (!id) {
         next({
-            "error": UnauthorizedError(),
-            "message": UnauthorizedError(), 
-            "name": "UnauthorizedError", 
+            "error": "UnauthorizedError",
+            "message": UnauthorizedError(),
+            "name": "UnauthorizedError",
             "status": 401
-        })
-        // res.status(401).send({
-        //     "error": UnauthorizedError(),
-        //     "message": UnauthorizedError(), 
-        //     "name": "UnauthorizedError"
-        // });
-    } else if (auth.startsWith(prefix)) {
-        const token = auth.slice(prefix.length);
-    
+        });
+    } else {
+
         try {
-            const { id } = jwt.verify(token, JWT_SECRET);
             const duplicateName = await getActivityByName(name);
 
-            if(duplicateName) {
+            if (duplicateName) {
                 next({
-                    "error": ActivityExistsError(),
-                    "message": ActivityExistsError(name), 
+                    "error": "ActivityExistsError",
+                    "message": ActivityExistsError(name),
                     "name": "ActivityExistsError"
-                })
-                // res.status(500).send({
-                //     "error": ActivityExistsError(),
-                //     "message": ActivityExistsError(name), 
-                //     "name": "ActivityExistsError"
-                // }); 
+                });
             } else {
                 const activity = await createActivity({ name, description });
                 res.send(activity);
             }
 
-            
-            
         } catch (error) {
             next(error);
         }
@@ -86,28 +75,26 @@ router.post('/', async(req, res, next) => {
 });
 
 // PATCH /api/activities/:activityId
-router.patch('/:activityId', async (req, res, next) => {
+router.patch('/:activityId', requireAuthentication, async (req, res, next) => {
     const { activityId } = req.params;
     const { name, description } = req.body;
+    const token = getToken(req.header('Authorization'));
+    const { id } = jwt.verify(token, JWT_SECRET);
 
-    const prefix = 'Bearer ';
-    const auth = req.header('Authorization');
-    if(!auth) {
-        res.status(401).send({
-            "error": UnauthorizedError(),
-            "message": UnauthorizedError(), 
-            "name": "UnauthorizedError"
+    if (!id) {
+        next({
+            "error": "UnauthorizedError",
+            "message": UnauthorizedError(),
+            "name": "UnauthorizedError",
+            "status": 401
         });
-    } else if (auth.startsWith(prefix)) {
-        const token = auth.slice(prefix.length);
-    
+    } else {
         try {
-            // const { id } = jwt.verify(token, JWT_SECRET);
             const existingActivity = await getActivityById(activityId)
 
             if(!existingActivity){
-                res.status(500).send({
-                    "error": ActivityNotFoundError(),
+                next({
+                    "error": "ActivityNotFoundError",
                     "message": ActivityNotFoundError(activityId), 
                     "name": "ActivityNotFoundError"
                 }); 
@@ -116,8 +103,8 @@ router.patch('/:activityId', async (req, res, next) => {
             const duplicateName = await getActivityByName(name);
 
             if(duplicateName) {
-                res.status(500).send({
-                    "error": ActivityExistsError(),
+                next({
+                    "error": "ActivityExistsError",
                     "message": ActivityExistsError(name), 
                     "name": "ActivityExistsError"
                 }); 
@@ -131,7 +118,7 @@ router.patch('/:activityId', async (req, res, next) => {
             next(error)
         }
     }
-})
+});
 
 
 module.exports = router;

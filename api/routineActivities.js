@@ -9,34 +9,36 @@ const {
   getRoutineById,
   getRoutineActivityById,
 } = require("../db");
+const { requireAuthentication, getToken } = require('./utils');
 const { UnauthorizedError, UnauthorizedUpdateError, UnauthorizedDeleteError } = require("../errors");
 
 // PATCH /api/routine_activities/:routineActivityId
-router.patch("/:routineActivityId", async (req, res, next) => {
+router.patch("/:routineActivityId", requireAuthentication, async (req, res, next) => {
   const { routineActivityId } = req.params;
   const { count, duration } = req.body;
-  const prefix = "Bearer ";
-  const auth = req.header("Authorization");
-  if (!auth) {
-    res.status(401).send({
-      error: UnauthorizedError(),
-      message: UnauthorizedError(),
-      name: "UnauthorizedError",
+  const token = getToken(req.header('Authorization'));
+  const { id, username } = jwt.verify(token, JWT_SECRET);
+
+  if (!id) {
+    next({
+      "error": "UnauthorizedError",
+      "message": UnauthorizedError(),
+      "name": "UnauthorizedError",
+      "status": 401
     });
-  } else if (auth.startsWith(prefix)) {
-    const token = auth.slice(prefix.length);
+  } else {
     try {
-      const { id, username } = jwt.verify(token, JWT_SECRET);
       const creator = await canEditRoutineActivity(routineActivityId, id);
 
       if (!creator) {
-        const routineActivity = await getRoutineActivityById(routineActivityId)
-
+        const routineActivity = await getRoutineActivityById(routineActivityId);
         const routine = await getRoutineById(routineActivity.routineId);
-        res.status(403).send({
-          error: UnauthorizedUpdateError(),
+
+        next({
+          error: "UnauthorizedUpdateError",
           message: UnauthorizedUpdateError(username, routine.name),
           name: "UnauthorizedUpdateError",
+          status: 403
         });
 
       } else {
@@ -52,42 +54,45 @@ router.patch("/:routineActivityId", async (req, res, next) => {
     }
   }
 });
+
 // DELETE /api/routine_activities/:routineActivityId
-router.delete("/:routineActivityId", async (req, res, next) => {
-    const { routineActivityId } = req.params;
-    const prefix = "Bearer ";
-    const auth = req.header("Authorization");
-    if (!auth) {
-      res.status(401).send({
-        error: UnauthorizedError(),
-        message: UnauthorizedError(),
-        name: "UnauthorizedError",
-      });
-    } else if (auth.startsWith(prefix)) {
-      const token = auth.slice(prefix.length);
-      try {
-        const { id, username } = jwt.verify(token, JWT_SECRET);
-        const creator = await canEditRoutineActivity(routineActivityId, id);
-  
-        if (!creator) {
-          const routineActivity = await getRoutineActivityById(routineActivityId)
-  
-          const routine = await getRoutineById(routineActivity.routineId);
-          res.status(403).send({
-            error: UnauthorizedDeleteError(),
-            message: UnauthorizedDeleteError(username, routine.name),
-            name: "UnauthorizedDeleteError",
-          });
-  
-        } else {
-          const remove = await destroyRoutineActivity(routineActivityId);
-          res.send(remove);
-        }
-      } catch (error) {
-        next(error);
+router.delete("/:routineActivityId", requireAuthentication, async (req, res, next) => {
+  const { routineActivityId } = req.params;
+  const token = getToken(req.header('Authorization'));
+  const { id, username } = jwt.verify(token, JWT_SECRET);
+
+  if (!id) {
+    next({
+      "error": "UnauthorizedError",
+      "message": UnauthorizedError(),
+      "name": "UnauthorizedError",
+      "status": 401
+    });
+  } else {
+    try {
+
+      const creator = await canEditRoutineActivity(routineActivityId, id);
+
+      if (!creator) {
+        const routineActivity = await getRoutineActivityById(routineActivityId)
+
+        const routine = await getRoutineById(routineActivity.routineId);
+        next({
+          error: "UnauthorizedDeleteError",
+          message: UnauthorizedDeleteError(username, routine.name),
+          name: "UnauthorizedDeleteError",
+          status: 403
+        });
+
+      } else {
+        const remove = await destroyRoutineActivity(routineActivityId);
+        res.send(remove);
       }
+    } catch (error) {
+      next(error);
     }
-  });
+  }
+});
 
 
 module.exports = router;

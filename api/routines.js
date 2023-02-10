@@ -11,12 +11,14 @@ const {
   addActivityToRoutine,
   getRoutineActivitiesByRoutine,
 } = require("../db");
+const { requireAuthentication, getToken } = require('./utils');
 const {
   UnauthorizedError,
   UnauthorizedUpdateError,
   UnauthorizedDeleteError,
   DuplicateRoutineActivityError,
 } = require("../errors");
+
 
 // GET /api/routines
 router.get("/", async (req, res, next) => {
@@ -30,20 +32,20 @@ router.get("/", async (req, res, next) => {
 });
 
 // POST /api/routines
-router.post("/", async (req, res, next) => {
+router.post("/", requireAuthentication, async (req, res, next) => {
   const { isPublic, name, goal } = req.body;
-  const prefix = "Bearer ";
-  const auth = req.header("Authorization");
-  if (!auth) {
-    res.status(401).send({
-      error: UnauthorizedError(),
-      message: UnauthorizedError(),
-      name: "UnauthorizedError",
+  const token = getToken(req.header('Authorization'));
+  const { id } = jwt.verify(token, JWT_SECRET);
+
+  if (!id) {
+    next({
+      "error": "UnauthorizedError",
+      "message": UnauthorizedError(),
+      "name": "UnauthorizedError",
+      "status": 401
     });
-  } else if (auth.startsWith(prefix)) {
-    const token = auth.slice(prefix.length);
+  } else {
     try {
-      const { id } = jwt.verify(token, JWT_SECRET);
       const routine = await createRoutine({
         creatorId: id,
         isPublic,
@@ -59,32 +61,31 @@ router.post("/", async (req, res, next) => {
 });
 
 // PATCH /api/routines/:routineId
-router.patch("/:routineId", async (req, res, next) => {
-  const { isPublic, name, goal } = req.body;
+router.patch("/:routineId", requireAuthentication, async (req, res, next) => {
   const { routineId } = req.params;
+  const token = getToken(req.header('Authorization'));
+  const { id, username } = jwt.verify(token, JWT_SECRET);
 
-  const prefix = "Bearer ";
-  const auth = req.header("Authorization");
-  if (!auth) {
-    res.status(401).send({
-      error: UnauthorizedError(),
-      message: UnauthorizedError(),
-      name: "UnauthorizedError",
+  if (!id) {
+    next({
+      "error": "UnauthorizedError",
+      "message": UnauthorizedError(),
+      "name": "UnauthorizedError",
+      "status": 401
     });
-  } else if (auth.startsWith(prefix)) {
-    const token = auth.slice(prefix.length);
+  } else {
     try {
-      const { id, username } = jwt.verify(token, JWT_SECRET);
       let routine = await getRoutineById(routineId);
 
       if (id === routine.creatorId) {
-        routine = await updateRoutine({ id: routineId, isPublic, name, goal });
+        routine = await updateRoutine({ id: routineId, ...req.body});
         res.send(routine);
       } else {
-        res.status(403).send({
+        next({
           error: UnauthorizedUpdateError(),
           message: UnauthorizedUpdateError(username, routine.name),
           name: "UnauthorizedUpdateError",
+          status: 403
         });
       }
     } catch (error) {
@@ -95,31 +96,31 @@ router.patch("/:routineId", async (req, res, next) => {
 });
 
 // DELETE /api/routines/:routineId
-router.delete("/:routineId", async (req, res, next) => {
+router.delete("/:routineId", requireAuthentication, async (req, res, next) => {
   const { routineId } = req.params;
+  const token = getToken(req.header('Authorization'));
+  const { id, username } = jwt.verify(token, JWT_SECRET);
 
-  const prefix = "Bearer ";
-  const auth = req.header("Authorization");
-  if (!auth) {
-    res.status(401).send({
-      error: "UnauthorizedError",
-      message: UnauthorizedError(),
-      name: "UnauthorizedError",
+  if (!id) {
+    next({
+      "error": "UnauthorizedError",
+      "message": UnauthorizedError(),
+      "name": "UnauthorizedError",
+      "status": 401
     });
-  } else if (auth.startsWith(prefix)) {
-    const token = auth.slice(prefix.length);
+  } else {
     try {
-      const { id, username } = jwt.verify(token, JWT_SECRET);
       let routine = await getRoutineById(routineId);
 
       if (id === routine.creatorId) {
         routine = await destroyRoutine(routineId);
         res.send(routine);
       } else {
-        res.status(403).send({
+        next({
           error: "UnauthorizedDeleteError",
           message: UnauthorizedDeleteError(username, routine.name),
           name: "UnauthorizedDeleteError",
+          status: 403
         });
       }
     } catch (error) {
@@ -143,10 +144,11 @@ router.post("/:routineId/activities", async (req, res, next) => {
       const row = routineActivities[i];
       if (row.activityId === activityId) {
         duplicate = true;
-        res.status(403).send({
+        next({
           error: "DuplicateRoutineActivityError",
           message: DuplicateRoutineActivityError(routineId, activityId),
           name: "DuplicateRoutineActivityError",
+          status: 403
         });
       }
     }
