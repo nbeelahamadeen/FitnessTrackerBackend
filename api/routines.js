@@ -102,7 +102,7 @@ router.delete("/:routineId", async (req, res, next) => {
   const auth = req.header("Authorization");
   if (!auth) {
     res.status(401).send({
-      error: UnauthorizedError(),
+      error: "UnauthorizedError",
       message: UnauthorizedError(),
       name: "UnauthorizedError",
     });
@@ -117,7 +117,7 @@ router.delete("/:routineId", async (req, res, next) => {
         res.send(routine);
       } else {
         res.status(403).send({
-          error: UnauthorizedDeleteError(),
+          error: "UnauthorizedDeleteError",
           message: UnauthorizedDeleteError(username, routine.name),
           name: "UnauthorizedDeleteError",
         });
@@ -130,7 +130,6 @@ router.delete("/:routineId", async (req, res, next) => {
 });
 
 // POST /api/routines/:routineId/activities
-//still need to deal with duplicate pairs test
 router.post("/:routineId/activities", async (req, res, next) => {
   const { routineId } = req.params;
   const { activityId, count, duration } = req.body;
@@ -145,7 +144,7 @@ router.post("/:routineId/activities", async (req, res, next) => {
       if (row.activityId === activityId) {
         duplicate = true;
         res.status(403).send({
-          error: DuplicateRoutineActivityError(),
+          error: "DuplicateRoutineActivityError",
           message: DuplicateRoutineActivityError(routineId, activityId),
           name: "DuplicateRoutineActivityError",
         });

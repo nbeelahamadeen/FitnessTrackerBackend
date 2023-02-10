@@ -55,6 +55,7 @@ userRouter.post('/register', async (req, res, next) => {
         }
          
     } catch (error) {
+        console.log(error);
       next(error); 
     }
 })
@@ -82,6 +83,7 @@ userRouter.post('/login', async (req, res, next) =>{
     
 
     } catch (error) {
+        console.log(error);
         next(error);
     }
 })
@@ -107,6 +109,7 @@ userRouter.get('/me', async (req, res, next) => {
                 res.send(user);
             }
         } catch (error) {
+            console.log(error);
             next(error);
         }
     }
@@ -134,6 +137,7 @@ userRouter.get('/:username/routines', async (req, res, next) => {
                 res.send(publicRoutines);
             }  
         } catch (error) {
+            console.log(error);
             next(error);
         }
 }})
